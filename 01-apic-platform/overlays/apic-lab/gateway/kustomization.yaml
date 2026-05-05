@@ -1,7 +1,13 @@
 
 namespace: apic-lab
+
 resources:
-- gatewaycluster.yaml
 - gateway-peering.yaml
 - gateway-service.yaml
 - admin-secret.yaml
+
+patches:
+- path: patches/gatewaycluster-patch.yaml
+  target:
+    kind: GatewayCluster
+    name: gateway

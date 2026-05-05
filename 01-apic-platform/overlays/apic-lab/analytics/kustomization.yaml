@@ -1,4 +1,8 @@
 
 namespace: apic-lab
-resources:
-- analytics.yaml
+
+patches:
+- path: patches/analyticscluster-patch.yaml
+  target:
+    kind: AnalyticsCluster
+    name: analytics

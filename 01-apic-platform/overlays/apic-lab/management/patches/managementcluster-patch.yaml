@@ -1,0 +1,42 @@
+apiVersion: management.apiconnect.ibm.com/v1beta1
+kind: ManagementCluster
+metadata:
+  name: management
+spec:
+  # Endpoints específicos do ambiente apic-lab
+  platformAPIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: api.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: api-endpoint
+
+  apiManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: manager.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: apim-endpoint
+
+  cloudManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: admin.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: cm-endpoint
+
+  consumerAPIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: consumer.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: consumer-endpoint
+
+  consumerCatalogEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: consumer-catalog.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: consumer-catalog-endpoint
+
+# Made with Bob

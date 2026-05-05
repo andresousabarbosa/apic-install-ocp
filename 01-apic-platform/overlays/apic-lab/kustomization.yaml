@@ -1,14 +1,10 @@
 
 namespace: apic-lab
+
 resources:
 - ../../base
 - namespace.yaml
-- selfsigning.yaml
-- analytics-ingestion-client.yaml
-- gateway-client-client.yaml
-- portal-admin-client.yaml
-- ingress-issuer.yaml
-- ingress-ca.yaml
-- wmapigateway-mgmt-client.yaml
+- certificates
+- management
 - gateway
 - analytics

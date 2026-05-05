@@ -1,27 +1,45 @@
 apiVersion: analytics.apiconnect.ibm.com/v1beta1
 kind: AnalyticsCluster
 metadata:
-  name: analytics-apic-lab
+  name: analytics
   labels:
     app.kubernetes.io/instance: analytics
     app.kubernetes.io/managed-by: ibm-apiconnect
-    app.kubernetes.io/name: analytics-apic-lab
+    app.kubernetes.io/name: analytics
 spec:
+  version: 12.1.0.2
+  profile: n1xc2.m16
+  
   license:
     accept: true
     license: L-PDZK-TWDH97
     metric: PROCESSOR_VALUE_UNIT
     use: nonproduction
+  
+  imageRegistry: cp.icr.io/cp/apic
+  imagePullSecrets:
+    - ibm-entitlement-key
+  
+  microServiceSecurity: certManager
   certManagerIssuer:
     kind: Issuer
     name: selfsigning-issuer
-  imagePullSecrets:
-    - ibm-entitlement-key
+  
+  mgmtPlatformEndpointSvcCASecret:
+    secretName: management-ca
+  mgmtPlatformEndpointCASecret:
+    secretName: ingress-ca
+  
   devPortalMode: true
+  analyticsMode: true
+  federatedAPIManagementMode: true
+  
   ingestion:
     enabled: true
     geoIPEnabled: true
     pipelineBatchDelay: 10
+    pipelineBatchSize: 2000
+    pipelineWorkers: 4
     clientSubjectDN: 'CN=analytics-ingestion-client,O=cert-manager'
     clientAuthEnabled: true
     configReloadAutomatic: true
@@ -31,33 +49,26 @@ spec:
       volumeClaimTemplate:
         storageClassName: ocs-external-storagecluster-ceph-rbd
         volumeSize: 50Gi
-    pipelineWorkers: 4
+    # Endpoint - to be customized by overlay
     endpoint:
       annotations:
         cert-manager.io/issuer: ingress-issuer
       hosts:
-        - name: ai.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
-          secretName: analytics-ai-endpoint
-    pipelineBatchSize: 2000
-  mgmtPlatformEndpointSvcCASecret:
-    secretName: management-ca
-  profile: n1xc2.m16
-  analyticsMode: true
+        - name: analytics-ingestion.example.com
+          secretName: analytics-ingestion-endpoint
+  
+  storage:
+    enabled: true
+    type: shared
+    shared:
+      volumeClaimTemplate:
+        storageClassName: ocs-external-storagecluster-ceph-rbd
+        volumeSize: 200Gi
+  
   external:
     offload:
       output: ''
     offload2:
       output: ''
-  microServiceSecurity: certManager
-  mgmtPlatformEndpointCASecret:
-    secretName: ingress-ca
-  version: 12.1.0.2
-  imageRegistry: cp.icr.io/cp/apic
-  storage:
-    enabled: true
-    shared:
-      volumeClaimTemplate:
-        storageClassName: ocs-external-storagecluster-ceph-rbd
-        volumeSize: 200Gi
-    type: shared
-  federatedAPIManagementMode: true
+
+# Made with Bob
