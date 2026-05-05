@@ -10,4 +10,4 @@ patches:
 - path: patches/gatewaycluster-patch.yaml
   target:
     kind: GatewayCluster
-    name: gateway
+    name: gwv6-apic-lab

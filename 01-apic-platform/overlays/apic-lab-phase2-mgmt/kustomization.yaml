@@ -1,0 +1,13 @@
+namespace: apic-lab
+
+resources:
+- ../../base/management
+- portal-admin-client.yaml
+- gateway-client-client.yaml
+- analytics-ingestion-client.yaml
+- wmapigateway-mgmt-client.yaml
+
+patches:
+- path: managementcluster-patch.yaml
+
+# Made with Bob

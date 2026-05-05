@@ -1,0 +1,12 @@
+namespace: apic-lab
+
+resources:
+- ../../base/gateway
+- admin-secret.yaml
+- gateway-service.yaml
+- gateway-peering.yaml
+
+patches:
+- path: gatewaycluster-patch.yaml
+
+# Made with Bob

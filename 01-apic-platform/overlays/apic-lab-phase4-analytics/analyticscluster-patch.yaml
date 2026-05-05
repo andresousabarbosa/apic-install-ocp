@@ -1,0 +1,17 @@
+apiVersion: analytics.apiconnect.ibm.com/v1beta1
+kind: AnalyticsCluster
+metadata:
+  name: analytics
+  labels:
+    app.kubernetes.io/name: analytics-apic-lab
+spec:
+  # Endpoint específico do ambiente apic-lab
+  ingestion:
+    endpoint:
+      annotations:
+        cert-manager.io/issuer: ingress-issuer
+      hosts:
+        - name: ai.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+          secretName: analytics-ai-endpoint
+
+# Made with Bob

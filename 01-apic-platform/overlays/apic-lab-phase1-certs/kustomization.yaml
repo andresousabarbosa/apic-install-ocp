@@ -1,0 +1,9 @@
+namespace: apic-lab
+
+resources:
+- namespace.yaml
+- selfsigning-issuer.yaml
+- ingress-ca.yaml
+- ingress-issuer.yaml
+
+# Made with Bob

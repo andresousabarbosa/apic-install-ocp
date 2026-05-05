@@ -1,7 +1,7 @@
 apiVersion: gateway.apiconnect.ibm.com/v1beta1
 kind: GatewayCluster
 metadata:
-  name: gwv6-apic-lab
+  name: gateway
   labels:
     app.kubernetes.io/name: gwv6-apic-lab
 spec:

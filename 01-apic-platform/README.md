@@ -7,22 +7,27 @@ Este projeto organiza a instalação do IBM API Connect usando Kustomize com uma
 ```
 01-apic-platform/
 ├── base/                           # Configurações base reutilizáveis
-│   ├── management/                 # ManagementCluster genérico
-│   ├── gateway/                    # GatewayCluster genérico
-│   └── analytics/                  # AnalyticsCluster genérico
+│   ├── management/                 # ManagementCluster base
+│   ├── gateway/                    # GatewayCluster base
+│   └── analytics/                  # AnalyticsCluster base
 │
 └── overlays/                       # Configurações específicas por ambiente
-    └── apic-lab/                   # Ambiente de laboratório
-        ├── certificates/           # Issuers e CA compartilhados
-        ├── management/
-        │   ├── certificates/       # Certificate resources (cert-manager)
-        │   └── patches/            # Patches específicos do ambiente
-        ├── gateway/
-        │   ├── certificates/       # Certificate resources (cert-manager)
-        │   ├── admin-secret.yaml   # Credenciais admin do DataPower
-        │   └── patches/            # Patches específicos do ambiente
-        └── analytics/
-            └── patches/            # Patches específicos do ambiente
+    ├── apic-lab/                   # Ambiente completo (deploy tudo)
+    │   ├── certificates/           # Issuers e CA compartilhados
+    │   ├── management/
+    │   │   ├── certificates/       # Certificate resources (cert-manager)
+    │   │   └── patches/            # Patches específicos do ambiente
+    │   ├── gateway/
+    │   │   ├── certificates/       # Certificate resources (cert-manager)
+    │   │   ├── admin-secret.yaml   # Credenciais admin do DataPower
+    │   │   └── patches/            # Patches específicos do ambiente
+    │   └── analytics/
+    │       └── patches/            # Patches específicos do ambiente
+    │
+    ├── apic-lab-phase1-certs/      # 🆕 Fase 1: Certificados base
+    ├── apic-lab-phase2-mgmt/       # 🆕 Fase 2: Management
+    ├── apic-lab-phase3-gateway/    # 🆕 Fase 3: Gateway
+    └── apic-lab-phase4-analytics/  # 🆕 Fase 4: Analytics
 ```
 
 ## Gerenciamento de Certificados
@@ -53,43 +58,135 @@ Este projeto usa **cert-manager** para gerenciar certificados automaticamente:
 
 ## Deploy
 
-### Opção 1: Deploy Completo (Tudo de uma vez)
+> **⚠️ Importante**: Os comandos abaixo assumem que você está na pasta `repo/`. Se estiver na raiz do projeto, adicione `repo/` antes dos caminhos.
+
+### Opção 1: Deploy por Fases (Recomendado) 🆕
+
+Para controle granular e troubleshooting facilitado, use os overlays por fase:
 
 ```bash
-oc apply -k repo/01-apic-platform/overlays/apic-lab
+# Certifique-se de estar na pasta correta
+cd /caminho/para/install-apic/repo
+
+# Fase 1: Certificados Base (2-5 minutos)
+oc apply -k 01-apic-platform/overlays/apic-lab-phase1-certs
+oc wait --for=condition=Ready certificate/ingress-ca -n apic-lab --timeout=300s
+
+# Fase 2: Management (20-30 minutos)
+oc apply -k 01-apic-platform/overlays/apic-lab-phase2-mgmt
+oc wait --for=condition=Ready managementcluster/management -n apic-lab --timeout=1800s
+
+# Configuração inicial via API REST
+cd ..
+./scripts/87j-apic-initial-config.sh -n apic-lab
+./scripts/87k-apic-new-porg-lur.sh -n apic-lab -u "user,email@domain.com,First,Last"
+
+# Fase 3: Gateway (15-20 minutos)
+cd repo
+oc apply -k 01-apic-platform/overlays/apic-lab-phase3-gateway
+oc wait --for=condition=Ready gatewaycluster/gwv6-apic-lab -n apic-lab --timeout=1800s
+
+# Configuração Gateway via API REST
+cd ..
+./scripts/87m-apic-dp-api-gateway-config.sh -n apic-lab
+
+# Fase 4: Analytics - Opcional (20-30 minutos)
+cd repo
+oc apply -k 01-apic-platform/overlays/apic-lab-phase4-analytics
+oc wait --for=condition=Ready analyticscluster/analytics -n apic-lab --timeout=1800s
+
+# Configuração Analytics via API REST
+cd ..
+./scripts/87l-apic-analytics-config.sh -n apic-lab
 ```
 
-### Opção 2: Deploy Sequencial (Recomendado)
+**Vantagens do Deploy por Fases:**
+- ✅ Controle total sobre a ordem de instalação
+- ✅ Troubleshooting mais fácil (isola problemas por componente)
+- ✅ Permite validar cada etapa antes de prosseguir
+- ✅ Ideal para ambientes de produção
 
-Para garantir que os componentes sejam criados na ordem correta:
+### Opção 2: Deploy Completo (Tudo de uma vez)
 
 ```bash
+# Certifique-se de estar na pasta correta
+cd /caminho/para/install-apic/repo
+
+# Deploy tudo
+oc apply -k 01-apic-platform/overlays/apic-lab
+
+# Aguardar componentes prontos
+oc wait --for=condition=Ready certificate --all -n apic-lab --timeout=300s
+oc wait --for=condition=Ready managementcluster/management -n apic-lab --timeout=1800s
+oc wait --for=condition=Ready gatewaycluster/gwv6-apic-lab -n apic-lab --timeout=1800s
+oc wait --for=condition=Ready analyticscluster/analytics -n apic-lab --timeout=1800s
+
+# Executar configurações via API REST
+cd ..
+./scripts/87j-apic-initial-config.sh -n apic-lab
+./scripts/87k-apic-new-porg-lur.sh -n apic-lab -u "user,email@domain.com,First,Last"
+./scripts/87m-apic-dp-api-gateway-config.sh -n apic-lab
+./scripts/87l-apic-analytics-config.sh -n apic-lab
+```
+
+### Opção 3: Deploy Sequencial (Componentes Individuais)
+
+```bash
+# Certifique-se de estar na pasta correta
+cd /caminho/para/install-apic/repo
+
 # 1. Certificados e Issuers primeiro
-oc apply -k repo/01-apic-platform/overlays/apic-lab/certificates
+oc apply -k 01-apic-platform/overlays/apic-lab/certificates
 
 # 2. Management e seus certificados
-oc apply -k repo/01-apic-platform/overlays/apic-lab/management
+oc apply -k 01-apic-platform/overlays/apic-lab/management
 
 # 3. Aguardar Management ficar Ready
 oc wait --for=condition=Ready managementcluster/management -n apic-lab --timeout=30m
 
 # 4. Gateway e Analytics (podem ser paralelos)
-oc apply -k repo/01-apic-platform/overlays/apic-lab/gateway
-oc apply -k repo/01-apic-platform/overlays/apic-lab/analytics
+oc apply -k 01-apic-platform/overlays/apic-lab/gateway
+oc apply -k 01-apic-platform/overlays/apic-lab/analytics
 ```
 
-### Opção 3: Deploy por Componente
+## Configuração Pós-Deploy
 
+Após o deploy dos recursos Kubernetes, é necessário executar configurações via API REST:
+
+### 1. Configuração Inicial do Management
 ```bash
-# Apenas Management
-oc apply -k repo/01-apic-platform/overlays/apic-lab/management
-
-# Apenas Gateway
-oc apply -k repo/01-apic-platform/overlays/apic-lab/gateway
-
-# Apenas Analytics
-oc apply -k repo/01-apic-platform/overlays/apic-lab/analytics
+./scripts/87j-apic-initial-config.sh -n apic-lab
 ```
+**O que faz:**
+- Configura User Registry (LUR)
+- Cria Mail Server (MailPit)
+- Atualiza Cloud Settings
+
+### 2. Criar Provider Organization
+```bash
+./scripts/87k-apic-new-porg-lur.sh -n apic-lab -u "user,email@domain.com,First,Last"
+```
+**O que faz:**
+- Cria usuário no LUR
+- Cria Provider Organization
+- Armazena credenciais em secret
+
+### 3. Registrar Gateway na Topologia
+```bash
+./scripts/87m-apic-dp-api-gateway-config.sh -n apic-lab
+```
+**O que faz:**
+- Registra Gateway Service no Management
+- Cria TLS Client/Server Profiles
+- Associa com Analytics (se existir)
+
+### 4. Registrar Analytics na Topologia
+```bash
+./scripts/87l-apic-analytics-config.sh -n apic-lab
+```
+**O que faz:**
+- Registra Analytics Service no Management
+- Cria TLS Client Profile
 
 ## Monitoramento
 
@@ -100,13 +197,16 @@ oc apply -k repo/01-apic-platform/overlays/apic-lab/analytics
 oc get managementcluster -n apic-lab
 oc describe managementcluster management -n apic-lab
 
-# Gateway
+# Gateway (nome atualizado: gwv6-apic-lab)
 oc get gatewaycluster -n apic-lab
-oc describe gatewaycluster gateway -n apic-lab
+oc describe gatewaycluster gwv6-apic-lab -n apic-lab
 
 # Analytics
 oc get analyticscluster -n apic-lab
 oc describe analyticscluster analytics -n apic-lab
+
+# Todos os componentes
+oc get managementcluster,gatewaycluster,analyticscluster -n apic-lab
 ```
 
 ### Verificar Certificados
@@ -120,38 +220,34 @@ oc describe certificate analytics-ingestion-client -n apic-lab
 
 # Verificar se as secrets foram criadas
 oc get secret -n apic-lab | grep -E "(analytics|gateway|portal|wmapigateway)"
+
+# Verificar validade dos certificados
+oc get certificate -n apic-lab -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status,EXPIRATION:.status.notAfter
 ```
 
-### Capturar senha para login no Admin
+### Capturar Credenciais
 
 ```bash
+# Senha do admin do Management
 oc get secret management-admin-secret -n apic-lab -o jsonpath='{.data.password}' | base64 -d
-admin/4g38XeHh2Ouv
+
+# Senha do admin do Gateway (DataPower)
+oc get secret admin-secret -n apic-lab -o jsonpath='{.data.password}' | base64 -d
 ```
 
-### Executar configuracao via interface
+### Endpoints Configurados
 
-Servicos configurados (Topologia)
-Data Power 
+**Management:**
+- Platform API: `https://api.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com`
+- API Manager: `https://manager.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com`
+- Cloud Manager: `https://admin.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com`
 
-Management terminal in the gateway service
-https://rgwd.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+**Gateway:**
+- Gateway: `https://rgw.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com`
+- Gateway Manager: `https://rgwd.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com`
 
-API endpoint base 
-Você colocou:
-https://rgw.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
-
-Analytic
-
-https://ai.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
-
-No API Dentro do Sandbox
-Associar o Gateway
-
-Dentro do Cloud Manager
-Criado uma organizacao e definido a senha.
-
-Depois que criar o analytic config tem que Clicar no Gateway e associar o analytic que vai capturar as informacoes
+**Analytics:**
+- Analytics Ingestion: `https://ai.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com`
 
 ### Logs do Operador
 
@@ -164,6 +260,9 @@ oc logs -n openshift-operators deployment/ibm-apiconnect -f | grep '"namespace":
 
 # Ver apenas erros
 oc logs -n openshift-operators deployment/ibm-apiconnect --since=10m | egrep -i "error|fail|panic"
+
+# Logs do DataPower Operator
+oc logs -n openshift-operators deployment/datapower-operator -f
 ```
 
 ## Customização para Novos Ambientes
@@ -179,10 +278,15 @@ cp -r overlays/apic-lab overlays/apic-prod
    - Hostnames nos patches de cada componente
    - Storage classes se necessário
    - Profiles de recursos
+   - Nome do namespace
 
-3. Deploy:
+3. Atualize o nome do Gateway no base se necessário:
+   - O base atual tem `name: gwv6-apic-lab` (específico do ambiente)
+   - Para reutilizar em outro ambiente, considere usar um nome genérico
+
+4. Deploy:
 ```bash
-oc apply -k repo/01-apic-platform/overlays/apic-prod
+oc apply -k 01-apic-platform/overlays/apic-prod
 ```
 
 ## Troubleshooting
@@ -198,6 +302,9 @@ oc logs -n cert-manager deployment/cert-manager -f
 
 # Verificar se o Issuer está pronto
 oc get issuer -n apic-lab
+
+# Ver detalhes de um Certificate que não está Ready
+oc describe certificate <cert-name> -n apic-lab
 ```
 
 ### Management não fica Ready
@@ -211,10 +318,47 @@ oc get pods -n apic-lab
 
 # Ver PVCs
 oc get pvc -n apic-lab
+
+# Ver logs de um pod específico
+oc logs -n apic-lab <pod-name> -f
 ```
+
+### Gateway não registra no Management
+
+```bash
+# Verificar se o Gateway está Ready
+oc get gatewaycluster gwv6-apic-lab -n apic-lab
+
+# Verificar certificados do Gateway
+oc get certificate -n apic-lab | grep gateway
+
+# Verificar se o script de configuração foi executado
+./scripts/87m-apic-dp-api-gateway-config.sh -n apic-lab
+
+# Verificar logs do Gateway Manager
+oc logs -n apic-lab <gateway-manager-pod> -f
+```
+
+### Patches não são aplicados
+
+```bash
+# Verificar se o nome do recurso no patch corresponde ao base
+# Gateway: nome deve ser 'gwv6-apic-lab' (não 'gateway')
+# Management: nome deve ser 'management'
+# Analytics: nome deve ser 'analytics'
+
+# Testar o build do kustomize sem aplicar
+oc kustomize 01-apic-platform/overlays/apic-lab | less
+```
+
+## Documentação Adicional
+
+Para informações detalhadas sobre o deploy por fases, consulte:
+- **[README-PHASES.md](overlays/README-PHASES.md)** - Guia completo do deploy por fases
 
 ## Referências
 
 - [IBM API Connect Documentation](https://www.ibm.com/docs/en/api-connect)
 - [Kustomize Documentation](https://kustomize.io/)
 - [Cert-Manager Documentation](https://cert-manager.io/docs/)
+- [OpenShift Documentation](https://docs.openshift.com/)

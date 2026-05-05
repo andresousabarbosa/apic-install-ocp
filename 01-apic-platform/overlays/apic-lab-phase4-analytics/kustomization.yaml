@@ -1,0 +1,9 @@
+namespace: apic-lab
+
+resources:
+- ../../base/analytics
+
+patches:
+- path: analyticscluster-patch.yaml
+
+# Made with Bob
