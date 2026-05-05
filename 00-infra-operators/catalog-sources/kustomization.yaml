@@ -1,0 +1,5 @@
+
+resources:
+#- apic
+- ibm-apiconnect-catalog.yaml
+- ibm-datapower-operator-catalog.yaml

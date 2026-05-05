@@ -1,0 +1,14 @@
+resources:
+#  - entitlement-secret.yaml
+  - namespace.yaml
+
+secretGenerator:
+  - name: ibm-entitlement-key
+    namespace: apic-operator
+    type: kubernetes.io/dockerconfigjson
+    files:
+      - .dockerconfigjson=entitlement/.dockerconfigjson
+
+generatorOptions:
+  disableNameSuffixHash: true
+

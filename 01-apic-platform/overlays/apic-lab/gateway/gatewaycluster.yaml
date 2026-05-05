@@ -1,0 +1,59 @@
+apiVersion: gateway.apiconnect.ibm.com/v1beta1
+kind: GatewayCluster
+metadata:
+  name: gwv6-apic-lab
+  labels:
+    app.kubernetes.io/instance: gateway
+    app.kubernetes.io/managed-by: ibm-apiconnect
+    app.kubernetes.io/name: gwv6-apic-lab
+spec:
+  peeringLogLevel: internal
+  license:
+    accept: true
+    license: L-PDZK-TWDH97
+    metric: PROCESSOR_VALUE_UNIT
+    use: nonproduction
+  apicGatewayServiceTLS:
+    secretName: gateway-service
+  imagePullSecrets:
+    - ibm-entitlement-key
+  mgmtPlatformEndpointSvcCASecret:
+    secretName: management-ca
+  configSequenceInterval: 3000
+  profile: n1xc4.m8
+  webGUIManagementPort: 9090
+  mtlsValidateClient: true
+  apiDebugProbeMaxRecords: 1000
+  apicGatewayPeeringTLS:
+    secretName: gateway-peering
+  mgmtPlatformEndpointCASecret:
+    secretName: ingress-ca
+  apiDebugProbe: true
+  webGUIManagementEnabled: false
+  version: 12.1.0.2
+  imageRegistry: cp.icr.io/cp/apic
+  apiDebugProbeExpirationMinutes: 60
+  tokenManagementService:
+    enabled: true
+    storage:
+      storageClassName: ocs-external-storagecluster-ceph-rbd
+      volumeSize: 30Gi
+  gatewayEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: rgw.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: gwv6-endpoint
+  apicGatewayServiceV5CompatibilityMode: false
+  defaultLogFormat: text
+  adminUser:
+    secretName: admin-secret
+  datapowerLogLevel: 3
+  updateStrategy:
+    mode: automatic
+  gatewayManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: rgwd.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: gwv6-manager-endpoint

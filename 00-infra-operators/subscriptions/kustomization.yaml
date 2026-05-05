@@ -1,0 +1,4 @@
+
+resources:
+- 04-api-connect-v12-subscription.yaml
+- datapower-operator.yaml

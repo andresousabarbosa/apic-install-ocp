@@ -1,0 +1,309 @@
+apiVersion: management.apiconnect.ibm.com/v1beta1
+kind: ManagementCluster
+metadata:
+  annotations:
+    apiconnect-operator/cp4i: "false"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"management.apiconnect.ibm.com/v1beta1","kind":"ManagementCluster","metadata":{"annotations":{"apiconnect-operator/cp4i":"false"},"labels":{"app.kubernetes.io/instance":"management","app.kubernetes.io/managed-by":"ibm-apiconnect","app.kubernetes.io/name":"management"},"name":"management","namespace":"tools"},"spec":{"analytics":{"ingestion":{"secretName":"analytics-ingestion-client"}},"apiManagerEndpoint":{"annotations":{"cert-manager.io/issuer":"ingress-issuer"},"hosts":[{"name":"manager.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com","secretName":"apim-endpoint"}]},"certManagerIssuer":{"kind":"Issuer","name":"selfsigning-issuer"},"cloudManagerEndpoint":{"annotations":{"cert-manager.io/issuer":"ingress-issuer"},"hosts":[{"name":"admin.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com","secretName":"cm-endpoint"}]},"consumerAPIEndpoint":{"annotations":{"cert-manager.io/issuer":"ingress-issuer"},"hosts":[{"name":"consumer.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com","secretName":"consumer-endpoint"}]},"consumerCatalogEndpoint":{"annotations":{"cert-manager.io/issuer":"ingress-issuer"},"hosts":[{"name":"consumer-catalog.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com","secretName":"consumer-catalog-endpoint"}]},"databaseVolumeClaimTemplate":{"storageClassName":"ocs-external-storagecluster-ceph-rbd"},"devPortal":{"admin":{"secretName":"devportal-admin-client"}},"discovery":{"enabled":true,"proxyCollectorEnabled":true},"federatedAPIManagement":{"admin":{"secretName":"federatedapimanagement-admin-client"}},"gateway":{"client":{"secretName":"gateway-client-client"}},"governance":{"enabled":true},"license":{"accept":true,"license":"L-PDZK-TWDH97","use":"nonproduction"},"microServiceSecurity":"certManager","nanoGateway":{"mgmt":{"secretName":"nano-gateway-mgmt-client"}},"platformAPIEndpoint":{"annotations":{"cert-manager.io/issuer":"ingress-issuer"},"hosts":[{"name":"api.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com","secretName":"api-endpoint"}]},"portal":{"admin":{"secretName":"portal-admin-client"}},"profile":"n1xc4.m16","version":"12.1.0.2","wmAPIGateway":{"mgmt":{"secretName":"wmapigateway-mgmt-client"}}}}
+  creationTimestamp: "2026-04-15T21:57:15Z"
+  generation: 2
+  labels:
+    app.kubernetes.io/instance: management
+    app.kubernetes.io/managed-by: ibm-apiconnect
+    app.kubernetes.io/name: management
+  name: management
+  namespace: tools
+  resourceVersion: "22052689"
+  uid: d181e610-32aa-40de-a0fd-55a1b5bb7a76
+spec:
+  analytics:
+    client: {}
+    ingestion:
+      secretName: analytics-ingestion-client
+  apiManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+      haproxy.router.openshift.io/timeout: 240s
+    hosts:
+    - name: manager.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+      secretName: apim-endpoint
+  certManagerIssuer:
+    kind: Issuer
+    name: selfsigning-issuer
+  cloudManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+      haproxy.router.openshift.io/timeout: 240s
+    hosts:
+    - name: admin.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+      secretName: cm-endpoint
+  consumerAPIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+      haproxy.router.openshift.io/timeout: 240s
+    hosts:
+    - name: consumer.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+      secretName: consumer-endpoint
+  consumerCatalogEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+      haproxy.router.openshift.io/timeout: 240s
+    hosts:
+    - name: consumer-catalog.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+      secretName: consumer-catalog-endpoint
+  databaseBackup:
+    protocol: local
+    repoRetentionFull: 14
+    schedule: 0 0 1 * * *
+  databaseVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+  dbArchiveVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+  dbBackupVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+    volumeSize: 120Gi
+  devPortal:
+    admin:
+      secretName: devportal-admin-client
+  discovery:
+    enabled: true
+    proxyCollectorEnabled: true
+    tablespaceDbVolumeClaimTemplate:
+      storageClassName: ocs-external-storagecluster-ceph-rbd
+      volumeSize: 25Gi
+  federatedAPIManagement:
+    admin:
+      secretName: federatedapimanagement-admin-client
+  gateway:
+    client:
+      secretName: gateway-client-client
+  governance:
+    enabled: true
+  imagePullSecrets:
+  - ibm-entitlement-key
+  imageRegistry: cp.icr.io/cp/apic
+  license:
+    accept: true
+    license: L-PDZK-TWDH97
+    metric: PROCESSOR_VALUE_UNIT
+    use: nonproduction
+  messageQueueVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+    volumeSize: 10Gi
+  microServiceSecurity: certManager
+  nanoGateway:
+    mgmt:
+      secretName: nano-gateway-mgmt-client
+  originalUID: d181e610-32aa-40de-a0fd-55a1b5bb7a76
+  platformAPIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+      haproxy.router.openshift.io/timeout: 240s
+    hosts:
+    - name: api.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+      secretName: api-endpoint
+  portal:
+    admin:
+      secretName: portal-admin-client
+  profile: n1xc4.m16
+  siteName: ef15c2a1
+  version: 12.1.0.2
+  wmAPIGateway:
+    mgmt:
+      secretName: wmapigateway-mgmt-client
+status:
+  AICredentialSecret: management-ai-cred
+  AnalyticsCredentialSecret: management-analytics-cred
+  TransitionHelperCredentialSecret: management-th-cred
+  atmCredentialSecret: management-atm-cred
+  conditions:
+  - lastTransitionTime: "2026-04-15T21:57:15Z"
+    message: ""
+    reason: na
+    status: "False"
+    type: Warning
+  - lastTransitionTime: "2026-04-26T20:46:09Z"
+    message: All services ready
+    reason: na
+    status: "True"
+    type: Ready
+  - lastTransitionTime: "2026-04-26T20:45:38Z"
+    message: ""
+    reason: na
+    status: "False"
+    type: Pending
+  - lastTransitionTime: "2026-04-15T21:57:15Z"
+    message: ""
+    reason: na
+    status: "False"
+    type: Error
+  - lastTransitionTime: "2026-04-15T21:57:15Z"
+    message: ""
+    reason: na
+    status: "False"
+    type: Failed
+  - lastTransitionTime: "2026-04-15T21:57:15Z"
+    message: ""
+    reason: na
+    status: "False"
+    type: Blocked
+  consumerToolkitCredentialSecret: management-ccli-cred
+  consumerUICredentialSecret: management-cui-cred
+  databaseCredentialsSecret: management-ef15c2a1-postgres-postgres-secret
+  dbClientSecrets:
+  - name: postgres
+    secretName: management-db-client-postgres
+  - name: apicuser
+    secretName: management-db-client-apicuser
+  dbReplicationSecret: management-ef15c2a1-db-replication
+  dbServerSecret: management-ef15c2a1-db-server
+  designerCredentialSecret: management-dsgr-cred
+  discoveryCredentialSecret: management-discovery-cred
+  encryptionSecret: management-enc-key
+  endpoints:
+  - name: apiManager
+    secretName: apim-endpoint
+    type: UI
+    uri: https://manager.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/manager
+  - name: admin
+    secretName: cm-endpoint
+    type: UI
+    uri: https://admin.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/admin
+  - name: consumerCatalog
+    secretName: consumer-catalog-endpoint
+    type: UI
+    uri: https://consumer-catalog.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/
+  - name: platformApi
+    secretName: api-endpoint
+    type: API
+    uri: https://api.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/
+  - name: jwksUrl
+    secretName: api-endpoint
+    type: API
+    uri: https://api.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/api/cloud/oauth2/certs
+  - name: consumerApi
+    secretName: consumer-endpoint
+    type: API
+    uri: https://consumer.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/
+  - name: complianceApi
+    secretName: api-endpoint
+    type: API
+    uri: https://api.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/
+  - name: apiDiscoveryService
+    secretName: api-endpoint
+    type: API
+    uri: https://api.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com/
+  governanceCredentialSecret: management-governance-cred
+  haMode: standalone
+  juhuCredentialSecret: management-juhu-cred
+  lastUpgradeRecord: management-up-jxztp
+  message: Management is ready
+  microServiceSecurity: certManager
+  natsTlsSecret: management-natscluster-mgmt
+  optionalMicroservices:
+    api-discovery-service:
+      currentVersion:
+        data: 3
+        schema: 3
+      status: upgrade completed
+      upgradeFrom:
+        data: 0
+        schema: 0
+      upgradeTo:
+        data: 3
+        schema: 3
+    compliance-service:
+      currentVersion:
+        data: 12
+        schema: 12
+      status: upgrade completed
+      upgradeFrom:
+        data: 0
+        schema: 0
+      upgradeTo:
+        data: 12
+        schema: 12
+  phase: Running
+  postgresDataStats:
+  - instanceName: management-ef15c2a1-db-1
+    podName: ""
+    pvcCapacity: 30720
+    pvcName: ""
+    pvcType: WAL
+    pvcUsed: 7744
+    pvcUsedPercentage: 28
+  - instanceName: management-ef15c2a1-db-1
+    podName: ""
+    pvcCapacity: 122880
+    pvcName: ""
+    pvcType: PostgreSQL
+    pvcUsed: 78
+    pvcUsedPercentage: 1
+  s3proxyTlsSecret: management-s3proxy-all
+  serviceCASecret: management-ca
+  serviceClientSecret: management-client
+  serviceServerSecret: management-server
+  services:
+    analytics-proxy: management-analytics-proxy
+    analytics-push: management-analytics-push
+    analytics-ui: management-analytics-ui
+    api-discovery-gw-proxy-collector: management-api-discovery-gw-proxy-collector
+    api-discovery-service: management-api-discovery-service
+    api-discovery-service-data-populate: ""
+    api-discovery-service-schema: ""
+    api-discovery-ui: management-api-discovery-ui
+    api-studio: management-api-studio
+    apim: management-apim
+    apim-data-populate: ""
+    apim-schema: ""
+    audit-logging: management-audit-logging
+    client-downloads-server: management-client-downloads-server
+    compliance-service: management-compliance-service
+    compliance-service-data-populate: ""
+    compliance-service-schema: ""
+    compliance-ui: management-compliance-ui
+    consumer-catalog: management-consumer-catalog
+    db: management-ef15c2a1-db-rw
+    edb-cluster: management-edb-cluster
+    juhu: management-juhu
+    ldap: management-ldap
+    lur: management-lur
+    lur-data-populate: ""
+    lur-schema: ""
+    natscluster: management-natscluster
+    portal-proxy: management-portal-proxy
+    s3proxy: management-s3proxy
+    system-check: management-system-check
+    taskmanager: management-taskmanager
+    ui: management-ui
+    websocket-proxy: management-websocket-proxy
+  state: 26/26
+  systemCheck:
+  - lastTransitionTime: "2026-05-04T16:08:58Z"
+    message: System check completed with no warnings or errors. See config map "management-system-check"
+      for more details. The next job is scheduled at "2026-05-04 17:05:00 +0000 UTC".
+    reason: SystemCheckCompleted
+    status: "True"
+    type: Complete
+  toolkitCredentialSecret: management-cli-cred
+  uiCredentialSecret: management-ui-cred
+  versions:
+    available:
+      channels: []
+      versions:
+      - licenses:
+        - displayName: IBM API Connect Enterprise V12.1.0.2
+          link: https://ibm.biz/BdbJqM
+          matchesCurrentType: true
+          name: L-PDZK-TWDH97
+        - displayName: IBM webMethods API Management 12.1
+          link: https://ibm.biz/Bdb9vS
+          name: L-CXFF-XRSP3J
+        - displayName: IBM Cloud Pak for Integration - API Calls 16.1.2
+          link: https://ibm.biz/BdnM2T
+          name: L-JVUW-LSTB9R
+        - displayName: IBM webMethods Hybrid Integration Subscription 11.2
+          link: https://ibm.biz/BdnaFK
+          name: L-SBZZ-CNR329
+        name: 12.1.0.2-2404
+    reconciled: 12.1.0.2-2404

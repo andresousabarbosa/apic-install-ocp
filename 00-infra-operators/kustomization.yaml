@@ -1,0 +1,6 @@
+
+resources:
+- entitlement
+- catalog-sources
+- subscriptions
+#Nao achei utilidade para a pasta ibm-common-services

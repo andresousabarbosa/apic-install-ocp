@@ -1,0 +1,91 @@
+apiVersion: management.apiconnect.ibm.com/v1beta1
+kind: ManagementCluster
+metadata:
+  name: management
+  labels:
+    app.kubernetes.io/instance: management
+    app.kubernetes.io/managed-by: ibm-apiconnect
+    app.kubernetes.io/name: management
+spec:
+  version: 12.1.0.2
+  profile: n1xc4.m16
+
+  license:
+    accept: true
+    license: L-PDZK-TWDH97
+    use: nonproduction
+
+  imageRegistry: cp.icr.io/cp/apic
+  imagePullSecrets:
+    - ibm-entitlement-key
+
+  microServiceSecurity: certManager
+
+  certManagerIssuer:
+    kind: Issuer
+    name: selfsigning-issuer
+
+  databaseVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+
+  dbArchiveVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+
+  dbBackupVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+    volumeSize: 120Gi
+
+  messageQueueVolumeClaimTemplate:
+    storageClassName: ocs-external-storagecluster-ceph-rbd
+    volumeSize: 10Gi
+
+  analytics:
+    ingestion:
+      secretName: analytics-ingestion-client
+
+  gateway:
+    client:
+      secretName: gateway-client-client
+
+  portal:
+    admin:
+      secretName: portal-admin-client
+
+  wmAPIGateway:
+    mgmt:
+      secretName: wmapigateway-mgmt-client
+
+  platformAPIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: api.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: api-endpoint
+
+  apiManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: manager.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: apim-endpoint
+
+  cloudManagerEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: admin.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: cm-endpoint
+
+  consumerAPIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: consumer.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: consumer-endpoint
+
+  consumerCatalogEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: consumer-catalog.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: consumer-catalog-endpoint

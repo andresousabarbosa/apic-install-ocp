@@ -1,0 +1,7 @@
+
+namespace: apic-lab
+resources:
+- gatewaycluster.yaml
+- gateway-peering.yaml
+- gateway-service.yaml
+- admin-secret.yaml
