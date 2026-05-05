@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: analytics-ingestion-client
+  namespace: apic-lab
+  labels:
+    app.kubernetes.io/component: management
+    app.kubernetes.io/instance: management
+    app.kubernetes.io/managed-by: ibm-apiconnect
+    app.kubernetes.io/name: analytics-ingestion-client
+spec:
+  secretName: analytics-ingestion-client
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days before expiry
+  subject:
+    organizations:
+      - cert-manager
+  commonName: analytics-ingestion-client
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+  issuerRef:
+    name: selfsigning-issuer
+    kind: Issuer
+
+# Made with Bob

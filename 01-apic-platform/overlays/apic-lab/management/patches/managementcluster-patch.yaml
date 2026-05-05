@@ -2,6 +2,8 @@ apiVersion: management.apiconnect.ibm.com/v1beta1
 kind: ManagementCluster
 metadata:
   name: management
+  annotations:
+    apiconnect-operator/skip-cert-validate: "true"
 spec:
   # Endpoints específicos do ambiente apic-lab
   platformAPIEndpoint:

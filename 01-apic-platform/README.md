@@ -1,83 +1,135 @@
-# APIC Platform (Namespaced)
-oc apply -k 01-apic-platform/overlays/apic-lab
+# API Connect Platform - Kustomize Project
+
+Este projeto organiza a instalação do IBM API Connect usando Kustomize com uma estrutura modular e reutilizável.
+
+## Estrutura do Projeto
+
+```
+01-apic-platform/
+├── base/                           # Configurações base reutilizáveis
+│   ├── management/                 # ManagementCluster genérico
+│   ├── gateway/                    # GatewayCluster genérico
+│   └── analytics/                  # AnalyticsCluster genérico
+│
+└── overlays/                       # Configurações específicas por ambiente
+    └── apic-lab/                   # Ambiente de laboratório
+        ├── certificates/           # Issuers e CA compartilhados
+        ├── management/
+        │   ├── certificates/       # Certificate resources (cert-manager)
+        │   └── patches/            # Patches específicos do ambiente
+        ├── gateway/
+        │   ├── certificates/       # Certificate resources (cert-manager)
+        │   ├── admin-secret.yaml   # Credenciais admin do DataPower
+        │   └── patches/            # Patches específicos do ambiente
+        └── analytics/
+            └── patches/            # Patches específicos do ambiente
+```
+
+## Gerenciamento de Certificados
+
+Este projeto usa **cert-manager** para gerenciar certificados automaticamente:
+
+- ✅ **Certificate resources** em vez de secrets estáticas
+- ✅ Renovação automática antes de expirar
+- ✅ Sem dados sensíveis hardcoded no Git
+- ✅ Cert-manager cria e atualiza as secrets automaticamente
+
+### Certificados Gerenciados
+
+**Management:**
+- `analytics-ingestion-client` - Para comunicação Management → Analytics
+- `gateway-client-client` - Para comunicação Management → Gateway
+- `portal-admin-client` - Para comunicação Management → Portal
+- `wmapigateway-mgmt-client` - Para comunicação Management → WM API Gateway
+
+**Gateway:**
+- `gateway-peering` - Para comunicação entre gateways
+- `gateway-service` - Para o serviço do gateway
+
+**Infraestrutura:**
+- `selfsigning-issuer` - Issuer raiz self-signed
+- `ingress-issuer` - Issuer CA para certificados de ingress
+- `ingress-ca` - CA compartilhado
+
+## Deploy
+
+### Opção 1: Deploy Completo (Tudo de uma vez)
+
+```bash
+oc apply -k repo/01-apic-platform/overlays/apic-lab
+```
+
+### Opção 2: Deploy Sequencial (Recomendado)
+
+Para garantir que os componentes sejam criados na ordem correta:
+
+```bash
+# 1. Certificados e Issuers primeiro
+oc apply -k repo/01-apic-platform/overlays/apic-lab/certificates
+
+# 2. Management e seus certificados
+oc apply -k repo/01-apic-platform/overlays/apic-lab/management
+
+# 3. Aguardar Management ficar Ready
+oc wait --for=condition=Ready managementcluster/management -n apic-lab --timeout=30m
+
+# 4. Gateway e Analytics (podem ser paralelos)
+oc apply -k repo/01-apic-platform/overlays/apic-lab/gateway
+oc apply -k repo/01-apic-platform/overlays/apic-lab/analytics
+```
+
+### Opção 3: Deploy por Componente
+
+```bash
+# Apenas Management
+oc apply -k repo/01-apic-platform/overlays/apic-lab/management
+
+# Apenas Gateway
+oc apply -k repo/01-apic-platform/overlays/apic-lab/gateway
+
+# Apenas Analytics
+oc apply -k repo/01-apic-platform/overlays/apic-lab/analytics
+```
+
+## Monitoramento
+
+### Verificar Status dos Componentes
+
+```bash
+# Management
 oc get managementcluster -n apic-lab
-
 oc describe managementcluster management -n apic-lab
-oc logs -n openshift-operators deployment/ibm-apiconnect -f
-oc get events -n apic-lab --sort-by=.metadata.creationTimestamp
 
-oc logs -n openshift-operators deployment/ibm-apiconnect -f \
-  | egrep -i "apic-lab|management|reconcil|error|ready"
+# Gateway
+oc get gatewaycluster -n apic-lab
+oc describe gatewaycluster gateway -n apic-lab
 
-#Especifico apic-lab
-oc logs -n openshift-operators deployment/ibm-apiconnect -f \
-  | grep '"namespace":"apic-lab"'
-``
+# Analytics
+oc get analyticscluster -n apic-lab
+oc describe analyticscluster analytics -n apic-lab
+```
 
-#Pegar so erro
-oc logs -n openshift-operators deployment/ibm-apiconnect --since=10m \
-  | egrep -i "error|fail|panic|apic-lab"
+### Verificar Certificados
 
+```bash
+# Listar todos os Certificate resources
+oc get certificate -n apic-lab
 
-oc get jobs
+# Ver detalhes de um certificado específico
+oc describe certificate analytics-ingestion-client -n apic-lab
 
-oc get events -n apic-lab
-oc get pods -n apic-lab
-oc get pvc -n apic-lab
+# Verificar se as secrets foram criadas
+oc get secret -n apic-lab | grep -E "(analytics|gateway|portal|wmapigateway)"
+```
 
-#Configurar o selfsigning-issuer
-oc get issuer selfsigning-issuer -n tools -o yaml
+### Capturar senha para login no Admin
 
+```bash
+oc get secret management-admin-secret -n apic-lab -o jsonpath='{.data.password}' | base64 -d
+admin/4g38XeHh2Ouv
+```
 
-admin/Jk0r8iVp12GB
-manager@2026
-Mesmo colocando a secret para nao pedir para trocar ele solicita a troca da senha
-
-
-
-START_TS=$(date +%s)
-START_HUMAN=$(date +"%H:%M")
-
-echo ">>> Monitorando ManagementCluster (namespace: apic-lab)"
-echo ">>> Início em: $START_HUMAN"
-echo
-
-while true; do
-  LINE=$(oc get managementcluster management -n apic-lab --no-headers)
-  NOW_HUMAN=$(date +"%H:%M")
-
-  READY=$(echo "$LINE" | awk '{print $2}')
-  STATUS=$(echo "$LINE" | awk '{print $3}')
-
-  echo "[$NOW_HUMAN] READY=$READY STATUS=$STATUS"
-
-  if [ "$STATUS" != "Pending" ]; then
-    END_TS=$(date +%s)
-    END_HUMAN=$(date +"%H:%M")
-
-    ELAPSED_SEC=$((END_TS - START_TS))
-    ELAPSED_MIN=$((ELAPSED_SEC / 60))
-    ELAPSED_H=$((ELAPSED_MIN / 60))
-    ELAPSED_M=$((ELAPSED_MIN % 60))
-
-    echo
-    echo "✅ Status final atingido!"
-    echo "   Início : $START_HUMAN"
-    echo "   Fim    : $END_HUMAN"
-    printf "   Duração: %02dh:%02dm\n" "$ELAPSED_H" "$ELAPSED_M"
-    echo
-    oc get managementcluster -n apic-lab
-    break
-  fi
-
-  sleep 600
-done
-
-
-
-oc get secret admin-secret -n tools -o yaml > admin-secret.yaml
-oc get secret gateway-peering -n tools -o yaml > gateway-peering.yaml
-oc get secret gateway-service -n tools -o yaml > gateway-service.yaml
+### Executar configuracao via interface
 
 Servicos configurados (Topologia)
 Data Power 
@@ -101,6 +153,68 @@ Criado uma organizacao e definido a senha.
 
 Depois que criar o analytic config tem que Clicar no Gateway e associar o analytic que vai capturar as informacoes
 
+### Logs do Operador
 
-  mgmtPlatformEndpointCASecret:
-    secretName: ingress-ca
+```bash
+# Logs do operador API Connect
+oc logs -n openshift-operators deployment/ibm-apiconnect -f
+
+# Filtrar por namespace específico
+oc logs -n openshift-operators deployment/ibm-apiconnect -f | grep '"namespace":"apic-lab"'
+
+# Ver apenas erros
+oc logs -n openshift-operators deployment/ibm-apiconnect --since=10m | egrep -i "error|fail|panic"
+```
+
+## Customização para Novos Ambientes
+
+Para criar um novo ambiente (ex: `apic-prod`):
+
+1. Copie o overlay existente:
+```bash
+cp -r overlays/apic-lab overlays/apic-prod
+```
+
+2. Atualize os patches com valores específicos:
+   - Hostnames nos patches de cada componente
+   - Storage classes se necessário
+   - Profiles de recursos
+
+3. Deploy:
+```bash
+oc apply -k repo/01-apic-platform/overlays/apic-prod
+```
+
+## Troubleshooting
+
+### Certificados não são criados
+
+```bash
+# Verificar se cert-manager está instalado
+oc get pods -n cert-manager
+
+# Verificar logs do cert-manager
+oc logs -n cert-manager deployment/cert-manager -f
+
+# Verificar se o Issuer está pronto
+oc get issuer -n apic-lab
+```
+
+### Management não fica Ready
+
+```bash
+# Ver eventos do namespace
+oc get events -n apic-lab --sort-by=.metadata.creationTimestamp
+
+# Ver pods
+oc get pods -n apic-lab
+
+# Ver PVCs
+oc get pvc -n apic-lab
+```
+
+## Referências
+
+- [IBM API Connect Documentation](https://www.ibm.com/docs/en/api-connect)
+- [Kustomize Documentation](https://kustomize.io/)
+- [Cert-Manager Documentation](https://cert-manager.io/docs/)

@@ -1,0 +1,9 @@
+namespace: apic-lab
+
+resources:
+- analytics-ingestion-client-cert.yaml
+- gateway-client-client-cert.yaml
+- portal-admin-client-cert.yaml
+- wmapigateway-mgmt-client-cert.yaml
+
+# Made with Bob

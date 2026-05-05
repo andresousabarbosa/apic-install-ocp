@@ -2,7 +2,6 @@
 namespace: apic-lab
 
 resources:
-- ../../base
 - namespace.yaml
 - certificates
 - management

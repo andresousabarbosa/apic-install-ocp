@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-service
+  namespace: apic-lab
+  labels:
+    app.kubernetes.io/instance: gatewaycluster
+    app.kubernetes.io/managed-by: ibm-apiconnect
+    app.kubernetes.io/name: gateway-service
+spec:
+  secretName: gateway-service
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days before expiry
+  subject:
+    organizations:
+      - cert-manager
+  commonName: gateway-service
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    - client auth
+  issuerRef:
+    name: selfsigning-issuer
+    kind: Issuer
+
+# Made with Bob

@@ -1,0 +1,7 @@
+namespace: apic-lab
+
+resources:
+- gateway-peering-cert.yaml
+- gateway-service-cert.yaml
+
+# Made with Bob

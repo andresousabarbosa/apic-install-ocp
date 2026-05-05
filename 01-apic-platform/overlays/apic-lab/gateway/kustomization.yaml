@@ -2,8 +2,8 @@
 namespace: apic-lab
 
 resources:
-- gateway-peering.yaml
-- gateway-service.yaml
+- ../../../base/gateway
+- certificates
 - admin-secret.yaml
 
 patches:
