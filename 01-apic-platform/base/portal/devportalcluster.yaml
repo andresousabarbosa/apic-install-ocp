@@ -1,0 +1,66 @@
+apiVersion: devportal.apiconnect.ibm.com/v1beta1
+kind: DevPortalCluster
+metadata:
+  name: wm-devportal
+  labels:
+    app.kubernetes.io/instance: wm-devportal
+    app.kubernetes.io/managed-by: ibm-apiconnect
+    app.kubernetes.io/name: wm-devportal
+spec:
+  version: 12.1.0.2
+  profile: n1xc2.m4
+  
+  license:
+    accept: true
+    license: L-PDZK-TWDH97
+    metric: PROCESSOR_VALUE_UNIT
+    use: nonproduction
+  
+  imageRegistry: cp.icr.io/cp/apic
+  imagePullSecrets:
+    - ibm-entitlement-key
+  
+  microServiceSecurity: certManager
+  mtlsValidateClient: true
+  
+  certManagerIssuer:
+    kind: Issuer
+    name: selfsigning-issuer
+  
+  # Admin client certificates - to be customized by overlay
+  adminClientSubjectDN: |
+    CN=devportal-admin-client,O=cert-manager
+    CN=wmapigateway-devportal-client,O=cert-manager
+  
+  # Analytics reference - to be customized by overlay
+  analyticsRef:
+    name: analytics
+    namespace: apic-lab
+  
+  # Management CA secrets
+  mgmtConsumerEndpointCASecret:
+    secretName: ingress-ca
+  mgmtPlatformEndpointCASecret:
+    secretName: ingress-ca
+  
+  # Standalone mode
+  isStandalone: false
+  
+  # Endpoints - to be customized by overlay
+  devportalAdminEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: api.devportal.example.com
+        secretName: devportal-admin
+    ingressClassName: nginx
+  
+  devportalUIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: devportal.example.com
+        secretName: devportal-web
+    ingressClassName: nginx
+
+# Made with Bob

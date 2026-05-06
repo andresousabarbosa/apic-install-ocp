@@ -1,0 +1,10 @@
+namespace: apic-lab
+
+resources:
+- ../../base/portal
+- devportal-admin-client.yaml
+
+patches:
+- path: devportalcluster-patch.yaml
+
+# Made with Bob

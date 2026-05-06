@@ -55,6 +55,15 @@ spec:
     mgmt:
       secretName: wmapigateway-mgmt-client
 
+  # API Discovery Service
+  discovery:
+    enabled: true
+    proxyCollectorEnabled: true
+
+  # Governance/Compliance Service
+  governance:
+    enabled: true
+
   platformAPIEndpoint:
     annotations:
       cert-manager.io/issuer: ingress-issuer

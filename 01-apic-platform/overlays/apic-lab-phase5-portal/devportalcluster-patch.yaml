@@ -1,0 +1,29 @@
+apiVersion: devportal.apiconnect.ibm.com/v1beta1
+kind: DevPortalCluster
+metadata:
+  name: wm-devportal
+spec:
+  # Analytics reference
+  analyticsRef:
+    name: analytics
+    namespace: apic-lab
+  
+  # DevPortal Admin Endpoint
+  devportalAdminEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: api.wm-devportal.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: devportal-admin
+    ingressClassName: nginx
+  
+  # DevPortal UI Endpoint
+  devportalUIEndpoint:
+    annotations:
+      cert-manager.io/issuer: ingress-issuer
+    hosts:
+      - name: wm-devportal.apiclab.apps.itz-h4eig5.infra01-lb.lon04.techzone.ibm.com
+        secretName: devportal-web
+    ingressClassName: nginx
+
+# Made with Bob

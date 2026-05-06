@@ -9,7 +9,8 @@ Este projeto organiza a instalação do IBM API Connect usando Kustomize com uma
 ├── base/                           # Configurações base reutilizáveis
 │   ├── management/                 # ManagementCluster base
 │   ├── gateway/                    # GatewayCluster base
-│   └── analytics/                  # AnalyticsCluster base
+│   ├── analytics/                  # AnalyticsCluster base
+│   └── portal/                     # DevPortalCluster base
 │
 └── overlays/                       # Configurações específicas por ambiente
     ├── apic-lab/                   # Ambiente completo (deploy tudo)
@@ -27,7 +28,8 @@ Este projeto organiza a instalação do IBM API Connect usando Kustomize com uma
     ├── apic-lab-phase1-certs/      # 🆕 Fase 1: Certificados base
     ├── apic-lab-phase2-mgmt/       # 🆕 Fase 2: Management
     ├── apic-lab-phase3-gateway/    # 🆕 Fase 3: Gateway
-    └── apic-lab-phase4-analytics/  # 🆕 Fase 4: Analytics
+    ├── apic-lab-phase4-analytics/  # 🆕 Fase 4: Analytics
+    └── apic-lab-phase5-portal/     # 🆕 Fase 5: Developer Portal (opcional)
 ```
 
 ## Gerenciamento de Certificados
@@ -84,7 +86,7 @@ cd ..
 # Fase 3: Gateway (15-20 minutos)
 cd repo
 oc apply -k 01-apic-platform/overlays/apic-lab-phase3-gateway
-oc wait --for=condition=Ready gatewaycluster/gwv6-apic-lab -n apic-lab --timeout=1800s
+oc wait --for=condition=Ready gatewaycluster/gwv6 -n apic-lab --timeout=1800s
 
 # Configuração Gateway via API REST
 cd ..
@@ -98,6 +100,15 @@ oc wait --for=condition=Ready analyticscluster/analytics -n apic-lab --timeout=1
 # Configuração Analytics via API REST
 cd ..
 ./scripts/87l-apic-analytics-config.sh -n apic-lab
+
+# Fase 5: Developer Portal - Opcional (15-20 minutos)
+cd repo
+oc apply -k 01-apic-platform/overlays/apic-lab-phase5-portal
+oc wait --for=condition=Ready devportalcluster/wm-devportal -n apic-lab --timeout=1800s
+
+# Configuração Portal via API REST
+cd ..
+./scripts/87r-apic-wm-dev-portal-config.sh -n apic-lab
 ```
 
 **Vantagens do Deploy por Fases:**
@@ -118,8 +129,9 @@ oc apply -k 01-apic-platform/overlays/apic-lab
 # Aguardar componentes prontos
 oc wait --for=condition=Ready certificate --all -n apic-lab --timeout=300s
 oc wait --for=condition=Ready managementcluster/management -n apic-lab --timeout=1800s
-oc wait --for=condition=Ready gatewaycluster/gwv6-apic-lab -n apic-lab --timeout=1800s
+oc wait --for=condition=Ready gatewaycluster/gwv6 -n apic-lab --timeout=1800s
 oc wait --for=condition=Ready analyticscluster/analytics -n apic-lab --timeout=1800s
+oc wait --for=condition=Ready devportalcluster/wm-devportal -n apic-lab --timeout=1800s
 
 # Executar configurações via API REST
 cd ..
@@ -127,6 +139,7 @@ cd ..
 ./scripts/87k-apic-new-porg-lur.sh -n apic-lab -u "user,email@domain.com,First,Last"
 ./scripts/87m-apic-dp-api-gateway-config.sh -n apic-lab
 ./scripts/87l-apic-analytics-config.sh -n apic-lab
+./scripts/87r-apic-wm-dev-portal-config.sh -n apic-lab
 ```
 
 ### Opção 3: Deploy Sequencial (Componentes Individuais)
@@ -197,9 +210,9 @@ Após o deploy dos recursos Kubernetes, é necessário executar configurações 
 oc get managementcluster -n apic-lab
 oc describe managementcluster management -n apic-lab
 
-# Gateway (nome atualizado: gwv6-apic-lab)
+# Gateway (nome: gwv6)
 oc get gatewaycluster -n apic-lab
-oc describe gatewaycluster gwv6-apic-lab -n apic-lab
+oc describe gatewaycluster gwv6 -n apic-lab
 
 # Analytics
 oc get analyticscluster -n apic-lab
@@ -281,8 +294,8 @@ cp -r overlays/apic-lab overlays/apic-prod
    - Nome do namespace
 
 3. Atualize o nome do Gateway no base se necessário:
-   - O base atual tem `name: gwv6-apic-lab` (específico do ambiente)
-   - Para reutilizar em outro ambiente, considere usar um nome genérico
+   - O base atual tem `name: gwv6` (nome padrão)
+   - Mantenha consistente com os scripts de instalação
 
 4. Deploy:
 ```bash
@@ -327,7 +340,7 @@ oc logs -n apic-lab <pod-name> -f
 
 ```bash
 # Verificar se o Gateway está Ready
-oc get gatewaycluster gwv6-apic-lab -n apic-lab
+oc get gatewaycluster gwv6 -n apic-lab
 
 # Verificar certificados do Gateway
 oc get certificate -n apic-lab | grep gateway
@@ -343,7 +356,7 @@ oc logs -n apic-lab <gateway-manager-pod> -f
 
 ```bash
 # Verificar se o nome do recurso no patch corresponde ao base
-# Gateway: nome deve ser 'gwv6-apic-lab' (não 'gateway')
+# Gateway: nome deve ser 'gwv6' (padrão dos scripts)
 # Management: nome deve ser 'management'
 # Analytics: nome deve ser 'analytics'
 

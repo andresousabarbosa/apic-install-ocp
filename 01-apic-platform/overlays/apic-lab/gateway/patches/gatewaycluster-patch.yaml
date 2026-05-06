@@ -1,9 +1,9 @@
 apiVersion: gateway.apiconnect.ibm.com/v1beta1
 kind: GatewayCluster
 metadata:
-  name: gwv6-apic-lab
+  name: gwv6
   labels:
-    app.kubernetes.io/name: gwv6-apic-lab
+    app.kubernetes.io/name: gwv6
 spec:
   # Desabilita validação mTLS para permitir registro inicial do Gateway
   # mtlsValidateClient: false
