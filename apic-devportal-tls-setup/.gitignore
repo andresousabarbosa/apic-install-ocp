@@ -1,0 +1,10 @@
+# Temporary certificates - DO NOT COMMIT
+temp-certificates/
+*.pem
+*.key
+*.crt
+
+# APIC CLI files
+.apiconnect/
+
+# Made with Bob

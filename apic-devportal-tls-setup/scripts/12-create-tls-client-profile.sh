@@ -11,20 +11,8 @@ CERT_DIR="${SCRIPT_DIR}/../temp-certificates"
 echo "🔐 Criando TLS Client Profile no Cloud Manager..."
 echo ""
 
-# Check if logged in by trying to list resources
-echo "🔍 Verificando login no APIC..."
-if ! apic tls-client-profiles:list-all --org admin --server "$APIC_SERVER" --insecure-skip-tls-verify &> /dev/null; then
-  echo "❌ Não está logado no APIC ou sessão expirou."
-  echo "   Execute ./00-login.sh primeiro."
-  exit 1
-fi
-echo "✅ Login verificado"
-echo ""
-
-echo "📋 Verificando pré-requisitos..."
-
 # Check if keystore exists and get URL
-KEYSTORES=$(apic keystores:list-all \
+KEYSTORES=$(apic keystores:list \
   --org admin \
   --server "$APIC_SERVER" \
   --format json \
@@ -41,7 +29,7 @@ else
 fi
 
 # Check if truststore exists and get URL
-TRUSTSTORES=$(apic truststores:list-all \
+TRUSTSTORES=$(apic truststores:list \
   --org admin \
   --server "$APIC_SERVER" \
   --format json \
@@ -68,7 +56,8 @@ EXISTING_PROFILE=$(apic tls-client-profiles:list-all \
   --insecure-skip-tls-verify 2>/dev/null || echo "{}")
 
 if echo "$EXISTING_PROFILE" | jq -e '.results[] | select(.name == "'"$TLS_PROFILE_NAME"'")' > /dev/null 2>&1; then
-  echo "⚠️  TLS Client Profile já existe: $TLS_PROFILE_NAME"
+  EXISTING_VERSION=$(echo "$EXISTING_PROFILE" | jq -r '.results[] | select(.name == "'"$TLS_PROFILE_NAME"'") | .version')
+  echo "⚠️  TLS Client Profile já existe: $TLS_PROFILE_NAME (versão: $EXISTING_VERSION)"
   echo ""
   read -p "❓ Deseja recriar o profile? (s/N): " -n 1 -r
   echo
@@ -79,7 +68,7 @@ if echo "$EXISTING_PROFILE" | jq -e '.results[] | select(.name == "'"$TLS_PROFIL
       --org admin \
       --server "$APIC_SERVER" \
       --insecure-skip-tls-verify \
-      "$TLS_PROFILE_NAME" || true
+      "${TLS_PROFILE_NAME}:${EXISTING_VERSION}" || true
     echo "✅ Profile deletado"
   else
     echo "ℹ️  Mantendo profile existente"
@@ -93,17 +82,50 @@ echo "   Keystore: $KEYSTORE_NAME"
 echo "   Truststore: $TRUSTSTORE_NAME"
 echo ""
 
-# Create YAML payload file
-cat > "$CERT_DIR/tls-profile-payload.yaml" <<EOF
-name: $TLS_PROFILE_NAME
-title: $TLS_PROFILE_NAME
-keystore_url: $KEYSTORE_URL
-truststore_url: $TRUSTSTORE_URL
+# Create YAML payload file - start with basic fields
+cat > "$CERT_DIR/tls-profile-payload.yaml" <<'YAML_START'
+name: TLS_PROFILE_NAME_PLACEHOLDER
+title: TLS_PROFILE_TITLE_PLACEHOLDER
+summary: TLS_PROFILE_SUMMARY_PLACEHOLDER
+keystore_url: KEYSTORE_URL_PLACEHOLDER
+truststore_url: TRUSTSTORE_URL_PLACEHOLDER
 protocols:
-  - tls_v1.2
-  - tls_v1.3
-version: 1.0.0
-EOF
+YAML_START
+
+# Add protocols
+if [ -n "$TLS_PROTOCOLS" ]; then
+  IFS=',' read -ra PROTOCOL_ARRAY <<< "$TLS_PROTOCOLS"
+  for protocol in "${PROTOCOL_ARRAY[@]}"; do
+    echo "  - $(echo $protocol | xargs)" >> "$CERT_DIR/tls-profile-payload.yaml"
+  done
+else
+  echo "  - tls_v1.2" >> "$CERT_DIR/tls-profile-payload.yaml"
+  echo "  - tls_v1.3" >> "$CERT_DIR/tls-profile-payload.yaml"
+fi
+
+# Add ciphers if specified
+if [ -n "$TLS_CIPHERS" ]; then
+  echo "ciphers:" >> "$CERT_DIR/tls-profile-payload.yaml"
+  IFS=',' read -ra CIPHER_ARRAY <<< "$TLS_CIPHERS"
+  for cipher in "${CIPHER_ARRAY[@]}"; do
+    echo "  - $(echo $cipher | xargs)" >> "$CERT_DIR/tls-profile-payload.yaml"
+  done
+fi
+
+# Add version
+echo "version: 1.0.0" >> "$CERT_DIR/tls-profile-payload.yaml"
+
+# Replace placeholders with actual values
+sed -i.bak \
+  -e "s|TLS_PROFILE_NAME_PLACEHOLDER|$TLS_PROFILE_NAME|g" \
+  -e "s|TLS_PROFILE_TITLE_PLACEHOLDER|$TLS_PROFILE_TITLE|g" \
+  -e "s|TLS_PROFILE_SUMMARY_PLACEHOLDER|$TLS_PROFILE_SUMMARY|g" \
+  -e "s|KEYSTORE_URL_PLACEHOLDER|$KEYSTORE_URL|g" \
+  -e "s|TRUSTSTORE_URL_PLACEHOLDER|$TRUSTSTORE_URL|g" \
+  "$CERT_DIR/tls-profile-payload.yaml"
+
+# Remove backup file
+rm -f "$CERT_DIR/tls-profile-payload.yaml.bak"
 
 echo "📄 Payload criado em: $CERT_DIR/tls-profile-payload.yaml"
 echo ""
@@ -121,7 +143,7 @@ if [ $? -eq 0 ]; then
   echo ""
   echo "📋 Verificando profile criado..."
   
-  PROFILE_LIST=$(apic tls-client-profiles:list \
+  PROFILE_LIST=$(apic tls-client-profiles:list-all \
     --org admin \
     --server "$APIC_SERVER" \
     --format json \

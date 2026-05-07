@@ -11,16 +11,6 @@ CERT_DIR="${SCRIPT_DIR}/../temp-certificates"
 echo "🔐 Criando Truststore no Cloud Manager..."
 echo ""
 
-# Check if logged in by trying to list resources
-echo "🔍 Verificando login no APIC..."
-if ! apic truststores:list-all --org admin --server "$APIC_SERVER" --insecure-skip-tls-verify &> /dev/null; then
-  echo "❌ Não está logado no APIC ou sessão expirou."
-  echo "   Execute ./00-login.sh primeiro."
-  exit 1
-fi
-echo "✅ Login verificado"
-echo ""
-
 # Check if CA certificate exists
 if [ ! -f "$CERT_DIR/ingress-ca.pem" ]; then
   echo "❌ Certificado CA não encontrado: $CERT_DIR/ingress-ca.pem"
@@ -31,7 +21,7 @@ fi
 echo "📋 Verificando se truststore já existe..."
 
 # Check if truststore already exists
-EXISTING_TRUSTSTORE=$(apic truststores:list-all \
+EXISTING_TRUSTSTORE=$(apic truststores:list \
   --org admin \
   --server "$APIC_SERVER" \
   --format json \
@@ -68,7 +58,8 @@ CA_CONTENT=$(cat "$CERT_DIR/ingress-ca.pem")
 # Create YAML payload file
 cat > "$CERT_DIR/truststore-payload.yaml" <<EOF
 name: $TRUSTSTORE_NAME
-title: $TRUSTSTORE_NAME
+title: $TRUSTSTORE_TITLE
+summary: $TRUSTSTORE_SUMMARY
 truststore: |
 $(echo "$CA_CONTENT" | sed 's/^/  /')
 EOF
